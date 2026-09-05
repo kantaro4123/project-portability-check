@@ -35,14 +35,22 @@ type sarifResult struct {
 	Locations []sarifLocation `json:"locations,omitempty"`
 }
 
-type sarifMessage struct{ Text string `json:"text"` }
-type sarifLocation struct{ PhysicalLocation sarifPhysicalLocation `json:"physicalLocation"` }
+type sarifMessage struct {
+	Text string `json:"text"`
+}
+type sarifLocation struct {
+	PhysicalLocation sarifPhysicalLocation `json:"physicalLocation"`
+}
 type sarifPhysicalLocation struct {
 	ArtifactLocation sarifArtifactLocation `json:"artifactLocation"`
 	Region           *sarifRegion          `json:"region,omitempty"`
 }
-type sarifArtifactLocation struct{ URI string `json:"uri"` }
-type sarifRegion struct{ StartLine int `json:"startLine"` }
+type sarifArtifactLocation struct {
+	URI string `json:"uri"`
+}
+type sarifRegion struct {
+	StartLine int `json:"startLine"`
+}
 
 func WriteSARIF(w io.Writer, report model.Report) error {
 	results := make([]sarifResult, 0, len(report.Findings))
