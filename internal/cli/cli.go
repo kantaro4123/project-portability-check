@@ -17,7 +17,7 @@ import (
 	"github.com/kantaro4123/project-portability-check/internal/report"
 )
 
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("project-portability-check", flag.ContinueOnError)
@@ -25,7 +25,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	jsonOutput := fs.Bool("json", false, "emit JSON")
 	sarifOutput := fs.Bool("sarif", false, "emit SARIF 2.1.0")
 	strict := fs.Bool("strict", false, "fail on warnings as well as errors")
-	listRules := fs.Bool("list-rules", false, "list built-in rule IDs")
+	target := fs.String("target", "", "comma-separated target platforms: linux, macos, windows")
+	listRules := fs.Bool("list-rules", false, "list built-in detector IDs")
 	showVersion := fs.Bool("version", false, "print version")
 	fs.Usage = func() {
 		fmt.Fprintln(stderr, "Usage: project-portability-check [options] [path]")
@@ -72,14 +73,22 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "error: project path must be a directory")
 		return 2
 	}
-	files, err := projectfiles.ListFiles(absRoot)
-	if err != nil {
-		fmt.Fprintf(stderr, "error: scan project: %v\n", err)
-		return 2
-	}
 	cfg, err := config.Load(absRoot)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: load configuration: %v\n", err)
+		return 2
+	}
+	if *target != "" {
+		targets, targetErr := config.ParseTargets(*target)
+		if targetErr != nil {
+			fmt.Fprintf(stderr, "error: %v\n", targetErr)
+			return 2
+		}
+		cfg.TargetPlatforms = targets
+	}
+	files, err := projectfiles.ListFiles(absRoot)
+	if err != nil {
+		fmt.Fprintf(stderr, "error: scan project: %v\n", err)
 		return 2
 	}
 	engine := analyzer.New(detectors.Default()...)
@@ -89,7 +98,13 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	findings = cfg.Filter(findings)
-	result := model.Report{Version: Version, Root: absRoot, Findings: findings, Summary: report.Summarize(len(files), findings)}
+	result := model.Report{
+		Version:         Version,
+		Root:            absRoot,
+		TargetPlatforms: cfg.TargetPlatforms,
+		Findings:        findings,
+		Summary:         report.Summarize(len(files), findings),
+	}
 	if *jsonOutput {
 		err = report.WriteJSON(stdout, result)
 	} else if *sarifOutput {
