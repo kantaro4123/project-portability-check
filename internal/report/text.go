@@ -17,6 +17,11 @@ func WriteText(w io.Writer, report model.Report) error {
 			return err
 		}
 	}
+	if report.BaselineSuppressed > 0 {
+		if _, err := fmt.Fprintf(w, "Baseline suppressed: %d finding(s)\n", report.BaselineSuppressed); err != nil {
+			return err
+		}
+	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return err
 	}
