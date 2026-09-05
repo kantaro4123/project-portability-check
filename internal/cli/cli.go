@@ -8,8 +8,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kantaro4123/project-portability-check/internal/analyzer"
+	"github.com/kantaro4123/project-portability-check/internal/baseline"
 	"github.com/kantaro4123/project-portability-check/internal/config"
 	"github.com/kantaro4123/project-portability-check/internal/detectors"
 	"github.com/kantaro4123/project-portability-check/internal/model"
@@ -26,6 +28,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	sarifOutput := fs.Bool("sarif", false, "emit SARIF 2.1.0")
 	strict := fs.Bool("strict", false, "fail on warnings as well as errors")
 	target := fs.String("target", "", "comma-separated target platforms: linux, macos, windows")
+	baselineFile := fs.String("baseline", "", "suppress findings already present in a previous JSON report")
 	listRules := fs.Bool("list-rules", false, "list built-in detector IDs")
 	showVersion := fs.Bool("version", false, "print version")
 	fs.Usage = func() {
@@ -86,11 +89,24 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		}
 		cfg.TargetPlatforms = targets
 	}
+
+	resolvedBaseline := ""
+	if *baselineFile != "" {
+		resolvedBaseline = *baselineFile
+		if !filepath.IsAbs(resolvedBaseline) {
+			resolvedBaseline = filepath.Join(absRoot, filepath.FromSlash(resolvedBaseline))
+		}
+	}
+
 	files, err := projectfiles.ListFiles(absRoot)
 	if err != nil {
 		fmt.Fprintf(stderr, "error: scan project: %v\n", err)
 		return 2
 	}
+	if resolvedBaseline != "" {
+		files = excludeProjectFile(files, absRoot, resolvedBaseline)
+	}
+
 	engine := analyzer.New(detectors.Default()...)
 	findings, err := engine.Analyze(ctx, analyzer.Project{Root: absRoot, Files: files})
 	if err != nil {
@@ -98,12 +114,24 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	findings = cfg.Filter(findings)
+
+	baselineSuppressed := 0
+	if resolvedBaseline != "" {
+		previous, baselineErr := baseline.Load(resolvedBaseline)
+		if baselineErr != nil {
+			fmt.Fprintf(stderr, "error: load baseline: %v\n", baselineErr)
+			return 2
+		}
+		findings, baselineSuppressed = previous.Filter(findings)
+	}
+
 	result := model.Report{
-		Version:         Version,
-		Root:            absRoot,
-		TargetPlatforms: cfg.TargetPlatforms,
-		Findings:        findings,
-		Summary:         report.Summarize(len(files), findings),
+		Version:            Version,
+		Root:               absRoot,
+		TargetPlatforms:    cfg.TargetPlatforms,
+		BaselineSuppressed: baselineSuppressed,
+		Findings:           findings,
+		Summary:            report.Summarize(len(files), findings),
 	}
 	if *jsonOutput {
 		err = report.WriteJSON(stdout, result)
@@ -120,4 +148,19 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+func excludeProjectFile(files []string, root, filename string) []string {
+	rel, err := filepath.Rel(root, filename)
+	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return files
+	}
+	rel = filepath.ToSlash(rel)
+	out := files[:0]
+	for _, file := range files {
+		if file != rel {
+			out = append(out, file)
+		}
+	}
+	return out
 }
