@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"regexp"
 	"sort"
-	"strings"
 
 	"github.com/kantaro4123/project-portability-check/internal/analyzer"
 	"github.com/kantaro4123/project-portability-check/internal/model"
@@ -63,6 +62,5 @@ func (PackageScripts) Detect(_ context.Context, project analyzer.Project) ([]mod
 			break
 		}
 	}
-	_ = strings.Builder{}
 	return findings, nil
 }
