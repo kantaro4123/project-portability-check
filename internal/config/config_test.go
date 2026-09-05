@@ -23,10 +23,11 @@ func TestLoadAndFilter(t *testing.T) {
 		{RuleID: "other", Path: "vendor/generated.go"},
 		{RuleID: "mac-only", Path: "src/mac.go", Platforms: []string{"macos"}},
 		{RuleID: "win", Path: "src/win.go", Platforms: []string{"windows"}},
+		{RuleID: "arch", Path: "Dockerfile", Platforms: []string{"arm64", "amd64"}},
 		{RuleID: "general", Path: "src/general.go"},
 	}
 	got := cfg.Filter(findings)
-	if len(got) != 2 || got[0].RuleID != "win" || got[1].RuleID != "general" {
+	if len(got) != 3 || got[0].RuleID != "win" || got[1].RuleID != "arch" || got[2].RuleID != "general" {
 		t.Fatalf("unexpected filtered findings: %+v", got)
 	}
 }
