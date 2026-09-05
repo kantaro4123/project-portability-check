@@ -58,35 +58,37 @@ func AttachFingerprints(findings []Finding) {
 	}
 }
 
-// FindingFingerprint identifies one finding at one location.
+// FindingFingerprint identifies one exact emitted finding. It intentionally
+// includes message metadata and the source line for precise machine output.
 func FindingFingerprint(f Finding) string {
-	return hashFinding(f, true)
-}
-
-// FindingIdentity identifies the semantic finding while intentionally ignoring
-// line numbers. It is used for baseline matching so harmless line movement does
-// not make an existing issue look new.
-func FindingIdentity(f Finding) string {
-	return hashFinding(f, false)
-}
-
-func hashFinding(f Finding, includeLine bool) string {
 	platforms := append([]string(nil), f.Platforms...)
 	for i := range platforms {
 		platforms[i] = strings.ToLower(platforms[i])
 	}
 	sort.Strings(platforms)
-	parts := []string{
+	return hashParts(
 		f.RuleID,
-		strings.ReplaceAll(f.Path, "\\", "/"),
+		normalizeFindingPath(f.Path),
+		strconv.Itoa(f.Line),
 		f.Title,
 		f.Description,
 		string(f.Severity),
 		strings.Join(platforms, ","),
-	}
-	if includeLine {
-		parts = append(parts, strconv.Itoa(f.Line))
-	}
+	)
+}
+
+// FindingIdentity is the deliberately conservative identity used by baselines.
+// Stable rule ID, normalized path, and severity survive line movement and copy
+// edits while count-aware matching still surfaces additional occurrences.
+func FindingIdentity(f Finding) string {
+	return hashParts(f.RuleID, normalizeFindingPath(f.Path), string(f.Severity))
+}
+
+func normalizeFindingPath(value string) string {
+	return strings.ReplaceAll(value, "\\", "/")
+}
+
+func hashParts(parts ...string) string {
 	h := sha256.New()
 	for _, part := range parts {
 		_, _ = h.Write([]byte(part))
