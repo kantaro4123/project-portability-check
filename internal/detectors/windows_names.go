@@ -2,7 +2,6 @@ package detectors
 
 import (
 	"context"
-	"path"
 	"strings"
 
 	"github.com/kantaro4123/project-portability-check/internal/analyzer"
@@ -37,7 +36,6 @@ func (WindowsNames) Detect(_ context.Context, project analyzer.Project) ([]model
 				break
 			}
 		}
-		_ = path.Base(rel)
 	}
 	return findings, nil
 }
