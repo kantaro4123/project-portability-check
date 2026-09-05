@@ -51,13 +51,19 @@ jobs:
       - name: Smoke-test baseline and target filtering
         shell: bash
         run: |
-          fixture="$RUNNER_TEMP/portability-fixture"
-          mkdir -p "$fixture"
-          printf '/%s/example/work/project\n' Users > "$fixture/config.txt"
+          baseline_fixture="$RUNNER_TEMP/portability-baseline-fixture"
+          mkdir -p "$baseline_fixture"
+          printf '/%s/example/work/project\n' Users > "$baseline_fixture/config.txt"
 
-          go run ./cmd/project-portability-check --json "$fixture" > "$RUNNER_TEMP/portability-baseline.json"
-          go run ./cmd/project-portability-check --strict --baseline "$RUNNER_TEMP/portability-baseline.json" "$fixture"
-          go run ./cmd/project-portability-check --strict --target macos "$fixture"
+          go run ./cmd/project-portability-check --json "$baseline_fixture" > "$RUNNER_TEMP/portability-baseline.json"
+          go run ./cmd/project-portability-check --strict --baseline "$RUNNER_TEMP/portability-baseline.json" "$baseline_fixture"
+
+          target_fixture="$RUNNER_TEMP/portability-target-fixture"
+          mkdir -p "$target_fixture"
+          printf '%s\n' '{"scripts":{"clean":"rm -rf dist"}}' > "$target_fixture/package.json"
+          printf '%s\n' '22' > "$target_fixture/.nvmrc"
+          printf '%s\n' '{"lockfileVersion":3}' > "$target_fixture/package-lock.json"
+          go run ./cmd/project-portability-check --strict --target macos "$target_fixture"
 
       - name: Smoke-test local GitHub Action
         uses: ./
