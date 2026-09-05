@@ -13,8 +13,7 @@ func WriteText(w io.Writer, report model.Report) error {
 		return err
 	}
 	if len(report.Findings) == 0 {
-		_, err := fmt.Fprintln(w, "No portability findings.\n")
-		if err != nil {
+		if _, err := fmt.Fprintln(w, "No portability findings."); err != nil {
 			return err
 		}
 	} else {
