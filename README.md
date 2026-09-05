@@ -16,8 +16,8 @@ Targets: linux, windows
 
 Findings
   ! Machine-specific absolute path (src/config.ts:18) [paths.absolute]
-    Found a macOS user path that may fail on another machine.
-    Affects: linux, windows
+    Found a macOS user path that may fail on another machine, including another machine running the same operating system.
+    Affects: linux, macos, windows
     Fix: Use a relative path, environment variable, or configurable project root.
 
   ! Unix-specific package script (package.json) [package.script-unix]
@@ -97,7 +97,7 @@ The composite action builds the checker from its own source and then analyzes th
 
 ### Filesystems and paths
 
-- macOS `/Users/...`, Linux `/home/...`, and Windows `C:\Users\...` absolute paths
+- machine-specific macOS `/Users/...`, Linux `/home/...`, and Windows `C:\Users\...` user paths, including same-OS machine differences
 - Windows reserved names such as `CON`, `NUL`, `COM1`, and `LPT1`
 - Windows-forbidden filename characters and risky long paths
 - files that collide on case-insensitive filesystems
@@ -200,7 +200,7 @@ Create `.portabilitycheck.json` in the project root to suppress intentional find
 }
 ```
 
-`--target` overrides `target_platforms` for a command. OS targeting only filters findings explicitly tagged with an operating system; architecture findings such as `arm64`/`amd64` remain visible. `ignore_paths` uses slash-separated glob patterns. The repository includes the published schema at [`schemas/portabilitycheck.schema.json`](schemas/portabilitycheck.schema.json).
+`--target` overrides `target_platforms` for a command. OS targeting only filters findings explicitly tagged with an operating system; architecture findings such as `arm64`/`amd64` remain visible. Machine-specific user-home paths apply to all target operating systems because they can fail on another machine even when the OS is the same. `ignore_paths` uses slash-separated glob patterns. The repository includes the published schema at [`schemas/portabilitycheck.schema.json`](schemas/portabilitycheck.schema.json).
 
 ## Machine-readable output
 
