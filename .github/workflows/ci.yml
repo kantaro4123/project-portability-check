@@ -45,13 +45,18 @@ jobs:
       - name: Unit tests
         run: go test ./...
 
+      - name: Dogfood strict portability checks
+        run: go run ./cmd/project-portability-check --strict .
+
       - name: Build
-        run: go build ./cmd/project-portability-check
+        shell: bash
+        run: go build -o "$RUNNER_TEMP/project-portability-check" ./cmd/project-portability-check
 
       - name: Smoke-test JSON and SARIF
         shell: bash
         run: |
           go run ./cmd/project-portability-check --version
-          go run ./cmd/project-portability-check --json . > report.json
-          go run ./cmd/project-portability-check --sarif . > report.sarif
-          go run ./cmd/project-portability-check .
+          go run ./cmd/project-portability-check --json . > "$RUNNER_TEMP/portability-report.json"
+          go run ./cmd/project-portability-check --sarif . > "$RUNNER_TEMP/portability-report.sarif"
+          grep -q '"version"' "$RUNNER_TEMP/portability-report.json"
+          grep -q '"runs"' "$RUNNER_TEMP/portability-report.sarif"
