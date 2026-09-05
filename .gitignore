@@ -1,0 +1,8 @@
+project-portability-check
+*.exe
+*.test
+*.out
+coverage.*
+dist/
+bin/
+.DS_Store
