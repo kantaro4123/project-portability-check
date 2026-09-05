@@ -16,8 +16,8 @@ func (ShellPortability) ID() string { return "shell.portability" }
 
 var shellRules = []struct {
 	id, title, description, suggestion string
-	platforms                         []string
-	re                                *regexp.Regexp
+	platforms                          []string
+	re                                 *regexp.Regexp
 }{
 	{"shell.grep-p", "GNU grep -P usage", "grep -P is not supported by the BSD grep shipped with macOS.", "Use portable grep/awk, or document GNU grep as a dependency.", []string{"macos"}, regexp.MustCompile(`(?m)(^|[;&|]\s*)grep\s+[^\n]*-P`)},
 	{"shell.sed-i", "Non-portable sed -i usage", "GNU and BSD sed use different syntax for in-place editing.", "Avoid sed -i or branch on the platform with an explicit backup suffix.", []string{"macos", "linux"}, regexp.MustCompile(`(?m)(^|[;&|]\s*)sed\s+[^\n]*-i(?:\s|$)`)},
