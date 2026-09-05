@@ -21,11 +21,8 @@ var envReferencePatterns = []*regexp.Regexp{
 }
 
 func (EnvironmentVariables) Detect(_ context.Context, project analyzer.Project) ([]model.Finding, error) {
-	files := make(map[string]bool, len(project.Files))
-	for _, rel := range project.Files {
-		files[strings.ToLower(rel)] = true
-	}
-	if any(files, ".env.example", ".env.sample", ".env.template", "env.example") {
+	files := normalizedFileSet(project.Files)
+	if hasInAncestors(files, ".", ".env.example", ".env.sample", ".env.template", "env.example") {
 		return nil, nil
 	}
 	vars := map[string]bool{}
