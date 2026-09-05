@@ -30,7 +30,7 @@ var shBashismRules = []struct {
 	name string
 	re   *regexp.Regexp
 }{
-	{"double-bracket test", regexp.MustCompile(`(?m)(^|[;&|]\s*)\[\[`)},
+	{"double-bracket test", regexp.MustCompile(`(?m)(^|[;&|]\s*|\bif\s+|\bwhile\s+)\[\[`)},
 	{"source command", regexp.MustCompile(`(?m)^\s*source\s+`)},
 	{"function keyword", regexp.MustCompile(`(?m)^\s*function\s+[A-Za-z_][A-Za-z0-9_]*`)},
 	{"array assignment", regexp.MustCompile(`(?m)^\s*[A-Za-z_][A-Za-z0-9_]*=\([^\n]*\)`)},
