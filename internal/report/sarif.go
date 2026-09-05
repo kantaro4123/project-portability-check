@@ -1,12 +1,9 @@
 package report
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/kantaro4123/project-portability-check/internal/model"
@@ -69,12 +66,16 @@ type sarifRegion struct {
 func WriteSARIF(w io.Writer, report model.Report) error {
 	results := make([]sarifResult, 0, len(report.Findings))
 	for _, finding := range report.Findings {
+		fingerprint := finding.Fingerprint
+		if fingerprint == "" {
+			fingerprint = model.FindingFingerprint(finding)
+		}
 		result := sarifResult{
 			RuleID:  finding.RuleID,
 			Level:   sarifLevel(finding.Severity),
 			Message: sarifMessage{Text: finding.Title + ": " + finding.Description},
 			PartialFingerprints: map[string]string{
-				"projectPortabilityCheck/v1": findingFingerprint(finding),
+				"projectPortabilityCheck/v1": fingerprint,
 			},
 		}
 		if finding.Path != "" {
@@ -131,21 +132,6 @@ func sarifRules(findings []model.Finding) []sarifReportingDescriptor {
 		})
 	}
 	return rules
-}
-
-func findingFingerprint(finding model.Finding) string {
-	h := sha256.New()
-	for _, part := range []string{
-		finding.RuleID,
-		strings.ReplaceAll(finding.Path, "\\", "/"),
-		strconv.Itoa(finding.Line),
-		finding.Title,
-		finding.Description,
-	} {
-		_, _ = h.Write([]byte(part))
-		_, _ = h.Write([]byte{0})
-	}
-	return hex.EncodeToString(h.Sum(nil))
 }
 
 func sarifLevel(severity model.Severity) string {
