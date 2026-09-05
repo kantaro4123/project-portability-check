@@ -13,6 +13,10 @@ All notable changes to this project will be documented here.
 - Stable exact finding fingerprints in JSON and richer SARIF rule metadata and partial fingerprints.
 - GitHub Action inputs for target platforms, baselines, and report file output.
 - A stable public rule catalog used by `--list-rules` and configuration suppressions.
+- Relative JavaScript/TypeScript import-case mismatch detection for case-sensitive filesystems.
+- POSIX `sh` shebang checks for Bash-only syntax such as `[[ ... ]]`, `source`, arrays, and here-strings.
+- CRLF shell-shebang detection for scripts that can fail during direct Unix execution.
+- Linux race-detector coverage for the concurrent analyzer pipeline.
 
 ### Fixed
 
@@ -20,12 +24,15 @@ All notable changes to this project will be documented here.
 - OS target filtering no longer hides architecture-only findings such as `amd64`/`arm64` risks.
 - Runtime analysis now checks every `go.mod` instead of stopping after the first module.
 - Project-internal baseline files are excluded from their own analysis.
+- Machine-specific user-home paths now remain relevant even when scanning for the same operating system.
+- Bash double-bracket detection now recognizes tests following `if` and `while` shell keywords.
 
 ### Changed
 
 - Version advanced to `0.2.0`.
-- CI now exercises baseline suppression, target filtering, GitHub Action output files, and strict self-analysis on Linux, macOS, and Windows.
+- CI now exercises baseline suppression, target filtering, GitHub Action output files, strict self-analysis, and machine-readable output on Linux, macOS, and Windows.
 - `--list-rules` now returns actual stable finding IDs rather than internal detector group IDs.
+- Baseline identity is stable across line movement and human-readable copy changes.
 
 ## [0.1.0] - 2026-09-05
 
