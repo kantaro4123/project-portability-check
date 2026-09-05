@@ -3,7 +3,9 @@ package detectors
 import (
 	"bytes"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -27,4 +29,35 @@ func lineNumber(data []byte, offset int) int {
 		return 0
 	}
 	return bytes.Count(data[:offset], []byte{'\n'}) + 1
+}
+
+func normalizedFileSet(files []string) map[string]bool {
+	set := make(map[string]bool, len(files))
+	for _, rel := range files {
+		set[strings.ToLower(path.Clean(rel))] = true
+	}
+	return set
+}
+
+func hasInAncestors(files map[string]bool, dir string, names ...string) bool {
+	dir = strings.ToLower(path.Clean(dir))
+	for {
+		for _, name := range names {
+			candidate := strings.ToLower(name)
+			if dir != "." && dir != "" {
+				candidate = path.Join(dir, candidate)
+			}
+			if files[candidate] {
+				return true
+			}
+		}
+		if dir == "." || dir == "" || dir == "/" {
+			return false
+		}
+		parent := path.Dir(dir)
+		if parent == dir {
+			return false
+		}
+		dir = parent
+	}
 }

@@ -29,13 +29,47 @@ func New(detectors ...Detector) *Analyzer {
 }
 
 func (a *Analyzer) Analyze(ctx context.Context, project Project) ([]model.Finding, error) {
-	var findings []model.Finding
-	for _, detector := range a.detectors {
-		items, err := detector.Detect(ctx, project)
+	if len(a.detectors) == 0 {
+		return nil, nil
+	}
+
+	type detectorResult struct {
+		index int
+		items []model.Finding
+		err   error
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	results := make(chan detectorResult, len(a.detectors))
+	for index, detector := range a.detectors {
+		index, detector := index, detector
+		go func() {
+			items, err := detector.Detect(ctx, project)
+			results <- detectorResult{index: index, items: items, err: err}
+		}()
+	}
+
+	batches := make([][]model.Finding, len(a.detectors))
+	errs := make([]error, len(a.detectors))
+	for range a.detectors {
+		result := <-results
+		batches[result.index] = result.items
+		errs[result.index] = result.err
+		if result.err != nil {
+			cancel()
+		}
+	}
+	for _, err := range errs {
 		if err != nil {
 			return nil, err
 		}
-		findings = append(findings, items...)
+	}
+
+	var findings []model.Finding
+	for _, batch := range batches {
+		findings = append(findings, batch...)
 	}
 	sort.SliceStable(findings, func(i, j int) bool {
 		if findings[i].Severity != findings[j].Severity {
@@ -44,8 +78,12 @@ func (a *Analyzer) Analyze(ctx context.Context, project Project) ([]model.Findin
 		if findings[i].Path != findings[j].Path {
 			return findings[i].Path < findings[j].Path
 		}
+		if findings[i].Line != findings[j].Line {
+			return findings[i].Line < findings[j].Line
+		}
 		return findings[i].RuleID < findings[j].RuleID
 	})
+	model.AttachFingerprints(findings)
 	return findings, nil
 }
 

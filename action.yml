@@ -17,6 +17,18 @@ inputs:
     description: "Output format: text, json, or sarif."
     required: false
     default: text
+  target:
+    description: "Optional comma-separated target platforms: linux, macos, windows."
+    required: false
+    default: ""
+  baseline:
+    description: Previous JSON report to use as a baseline, relative to the analyzed project root.
+    required: false
+    default: ""
+  output:
+    description: Optional report file path, relative to the GitHub workspace.
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -38,6 +50,9 @@ runs:
         INPUT_PATH: ${{ inputs.path }}
         INPUT_STRICT: ${{ inputs.strict }}
         INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+        INPUT_OUTPUT: ${{ inputs.output }}
       run: |
         args=()
         case "$INPUT_FORMAT" in
@@ -49,4 +64,23 @@ runs:
         if [ "$INPUT_STRICT" = "true" ]; then
           args+=(--strict)
         fi
-        "$RUNNER_TEMP/project-portability-check-action" "${args[@]}" "$GITHUB_WORKSPACE/$INPUT_PATH"
+        if [ -n "$INPUT_TARGET" ]; then
+          args+=(--target "$INPUT_TARGET")
+        fi
+        if [ -n "$INPUT_BASELINE" ]; then
+          args+=(--baseline "$INPUT_BASELINE")
+        fi
+
+        project="$GITHUB_WORKSPACE/$INPUT_PATH"
+        if [ -z "$INPUT_OUTPUT" ]; then
+          "$RUNNER_TEMP/project-portability-check-action" "${args[@]}" "$project"
+          exit $?
+        fi
+
+        output="$GITHUB_WORKSPACE/$INPUT_OUTPUT"
+        mkdir -p "$(dirname "$output")"
+        set +e
+        "$RUNNER_TEMP/project-portability-check-action" "${args[@]}" "$project" | tee "$output"
+        status=${PIPESTATUS[0]}
+        set -e
+        exit "$status"

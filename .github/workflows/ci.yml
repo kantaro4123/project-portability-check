@@ -45,15 +45,45 @@ jobs:
       - name: Unit tests
         run: go test ./...
 
+      - name: Race tests
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+
       - name: Dogfood strict portability checks
-        run: go run ./cmd/project-portability-check --strict .
+        run: go run ./cmd/project-portability-check --strict --target linux,macos,windows .
+
+      - name: Smoke-test baseline and target filtering
+        shell: bash
+        run: |
+          baseline_fixture="$RUNNER_TEMP/portability-baseline-fixture"
+          mkdir -p "$baseline_fixture"
+          printf '/%s/example/work/project\n' Users > "$baseline_fixture/config.txt"
+
+          go run ./cmd/project-portability-check --json "$baseline_fixture" > "$RUNNER_TEMP/portability-baseline.json"
+          go run ./cmd/project-portability-check --strict --baseline "$RUNNER_TEMP/portability-baseline.json" "$baseline_fixture"
+
+          target_fixture="$RUNNER_TEMP/portability-target-fixture"
+          mkdir -p "$target_fixture"
+          printf '%s\n' '{"scripts":{"clean":"rm -rf dist"}}' > "$target_fixture/package.json"
+          printf '%s\n' '22' > "$target_fixture/.nvmrc"
+          printf '%s\n' '{"lockfileVersion":3}' > "$target_fixture/package-lock.json"
+          go run ./cmd/project-portability-check --strict --target macos "$target_fixture"
 
       - name: Smoke-test local GitHub Action
         uses: ./
         with:
           path: .
           strict: "true"
-          format: text
+          format: json
+          target: linux,macos,windows
+          output: .tmp/action-portability-report.json
+
+      - name: Verify action output
+        shell: bash
+        run: |
+          grep -q '"version"' .tmp/action-portability-report.json
+          grep -q '"target_platforms"' .tmp/action-portability-report.json
+          rm -rf .tmp
 
       - name: Build
         shell: bash
@@ -62,8 +92,15 @@ jobs:
       - name: Smoke-test JSON and SARIF
         shell: bash
         run: |
+          fixture="$RUNNER_TEMP/output-fixture"
+          mkdir -p "$fixture"
+          printf '/%s/example/work/project\n' Users > "$fixture/config.txt"
+
           go run ./cmd/project-portability-check --version
-          go run ./cmd/project-portability-check --json . > "$RUNNER_TEMP/portability-report.json"
-          go run ./cmd/project-portability-check --sarif . > "$RUNNER_TEMP/portability-report.sarif"
+          go run ./cmd/project-portability-check --json "$fixture" > "$RUNNER_TEMP/portability-report.json"
+          go run ./cmd/project-portability-check --sarif "$fixture" > "$RUNNER_TEMP/portability-report.sarif"
           grep -q '"version"' "$RUNNER_TEMP/portability-report.json"
+          grep -q '"fingerprint"' "$RUNNER_TEMP/portability-report.json"
           grep -q '"runs"' "$RUNNER_TEMP/portability-report.sarif"
+          grep -q '"rules"' "$RUNNER_TEMP/portability-report.sarif"
+          grep -q '"partialFingerprints"' "$RUNNER_TEMP/portability-report.sarif"
