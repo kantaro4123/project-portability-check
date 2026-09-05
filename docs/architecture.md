@@ -9,7 +9,7 @@ The project is intentionally dependency-free at runtime. The standard library is
 3. `internal/analyzer` runs independent `Detector` implementations concurrently. Results are collected and sorted deterministically before stable finding fingerprints are attached.
 4. `internal/detectors` contains focused portability rules. Detectors do not mutate the analyzed project. Workspace-aware rules can inherit runtime pins and lockfiles from parent directories.
 5. Configuration suppressions and target-platform filtering are applied after detection so detector behavior stays reusable and deterministic.
-6. If `--baseline` is active, `internal/baseline` suppresses matching findings from an earlier JSON report. Matching ignores line movement but preserves occurrence counts so new duplicate problems remain visible.
+6. If `--baseline` is active, `internal/baseline` suppresses matching findings from an earlier JSON report. Matching tolerates line movement and human-readable copy changes while preserving occurrence counts so new duplicate problems remain visible.
 7. `internal/report` computes the score and renders text, JSON, or SARIF. SARIF includes public rule descriptors and partial fingerprints.
 8. `internal/cli` owns flags, baseline resolution, exit codes, and output selection.
 
@@ -25,12 +25,14 @@ Detectors should prefer high-confidence static evidence. If a condition is commo
 
 Detector groups are read-only and independent, so the analyzer can run them concurrently. It never relies on goroutine completion order: results are collected, then sorted by severity, path, line, and rule ID. This keeps text, JSON, SARIF, and baseline behavior stable across machines while reducing wall-clock time on larger repositories.
 
-## Baseline identity
+The Linux CI job runs the Go race detector over the full test suite to guard this concurrent pipeline against shared-state regressions.
+
+## Finding and baseline identity
 
 Machine output has two related identities:
 
-- an exact finding fingerprint includes the source line and is exposed in JSON/SARIF;
-- baseline identity intentionally excludes the line number so harmless line movement does not reintroduce a known finding.
+- an exact finding fingerprint includes the rule, normalized path, line, severity, display copy, and normalized platform metadata and is exposed in JSON/SARIF;
+- baseline identity intentionally uses stable semantic fields — rule ID, normalized path, and severity — so line movement, remediation wording, or description improvements do not reintroduce a known finding.
 
 Baseline matching is count-aware rather than set-based. If one instance existed in the baseline and a second equivalent instance is introduced, only one is suppressed.
 
