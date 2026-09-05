@@ -103,12 +103,24 @@ func TestDockerFixedPlatform(t *testing.T) {
 
 func TestFullCIMatrixHasNoFinding(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, ".github/workflows/ci.yml", "runs-on: ubuntu-latest\n# macos-latest windows-latest\n")
+	writeTestFile(t, root, ".github/workflows/ci.yml", "jobs:\n  linux:\n    runs-on: ubuntu-latest\n  mac:\n    runs-on: macos-latest\n  win:\n    runs-on: windows-latest\n")
 	findings, err := (CIMatrix{}).Detect(context.Background(), analyzer.Project{Root: root, Files: []string{".github/workflows/ci.yml"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(findings) != 0 {
+		t.Fatalf("unexpected findings: %+v", findings)
+	}
+}
+
+func TestCICommentsDoNotCountAsCoverage(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, ".github/workflows/ci.yml", "runs-on: ubuntu-latest\n# macos-latest windows-latest\n")
+	findings, err := (CIMatrix{}).Detect(context.Background(), analyzer.Project{Root: root, Files: []string{".github/workflows/ci.yml"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != 1 || findings[0].RuleID != "ci.platform-coverage" {
 		t.Fatalf("unexpected findings: %+v", findings)
 	}
 }
