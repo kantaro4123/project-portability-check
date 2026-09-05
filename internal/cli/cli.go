@@ -25,6 +25,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	jsonOutput := fs.Bool("json", false, "emit JSON")
 	sarifOutput := fs.Bool("sarif", false, "emit SARIF 2.1.0")
 	strict := fs.Bool("strict", false, "fail on warnings as well as errors")
+	listRules := fs.Bool("list-rules", false, "list built-in rule IDs")
 	showVersion := fs.Bool("version", false, "print version")
 	fs.Usage = func() {
 		fmt.Fprintln(stderr, "Usage: project-portability-check [options] [path]")
@@ -37,6 +38,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	if *showVersion {
 		fmt.Fprintf(stdout, "project-portability-check %s\n", Version)
+		return 0
+	}
+	if *listRules {
+		for _, detector := range detectors.Default() {
+			fmt.Fprintln(stdout, detector.ID())
+		}
 		return 0
 	}
 	if *jsonOutput && *sarifOutput {
