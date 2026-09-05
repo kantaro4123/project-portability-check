@@ -31,7 +31,12 @@ jobs:
 
       - name: Format check
         shell: bash
-        run: test -z "$(gofmt -l .)"
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            printf 'gofmt required for:\n%s\n' "$unformatted"
+            exit 1
+          fi
 
       - name: Vet
         run: go vet ./...
