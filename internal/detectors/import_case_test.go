@@ -9,7 +9,7 @@ import (
 
 func TestImportCaseMismatchIsReported(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "src/main.ts", `import { value } from "./Utils";\n`)
+	writeTestFile(t, root, "src/main.ts", "import { value } from \"./Utils\";\n")
 	writeTestFile(t, root, "src/utils.ts", "export const value = 1;\n")
 	project := analyzer.Project{Root: root, Files: []string{"src/main.ts", "src/utils.ts"}}
 
@@ -24,7 +24,7 @@ func TestImportCaseMismatchIsReported(t *testing.T) {
 
 func TestImportCaseExactPathIsClean(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "src/main.ts", `import { value } from "./utils";\n`)
+	writeTestFile(t, root, "src/main.ts", "import { value } from \"./utils\";\n")
 	writeTestFile(t, root, "src/utils.ts", "export const value = 1;\n")
 	project := analyzer.Project{Root: root, Files: []string{"src/main.ts", "src/utils.ts"}}
 
@@ -39,7 +39,7 @@ func TestImportCaseExactPathIsClean(t *testing.T) {
 
 func TestImportCaseResolvesIndexFiles(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "src/main.ts", `import thing from "./Widget";\n`)
+	writeTestFile(t, root, "src/main.ts", "import thing from \"./Widget\";\n")
 	writeTestFile(t, root, "src/widget/index.ts", "export default 1;\n")
 	project := analyzer.Project{Root: root, Files: []string{"src/main.ts", "src/widget/index.ts"}}
 
@@ -54,7 +54,7 @@ func TestImportCaseResolvesIndexFiles(t *testing.T) {
 
 func TestImportCaseIgnoresPackageImports(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "src/main.ts", `import React from "React";\n`)
+	writeTestFile(t, root, "src/main.ts", "import React from \"React\";\n")
 	project := analyzer.Project{Root: root, Files: []string{"src/main.ts"}}
 
 	findings, err := (ImportCase{}).Detect(context.Background(), project)
