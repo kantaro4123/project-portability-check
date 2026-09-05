@@ -32,8 +32,9 @@ type Summary struct {
 
 // Report is the machine-readable analysis result.
 type Report struct {
-	Version  string    `json:"version"`
-	Root     string    `json:"root"`
-	Summary  Summary   `json:"summary"`
-	Findings []Finding `json:"findings"`
+	Version         string    `json:"version"`
+	Root            string    `json:"root"`
+	TargetPlatforms []string  `json:"target_platforms,omitempty"`
+	Summary         Summary   `json:"summary"`
+	Findings        []Finding `json:"findings"`
 }
