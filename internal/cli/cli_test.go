@@ -70,8 +70,13 @@ func TestStrictFailsOnWarning(t *testing.T) {
 
 func TestTargetPlatformFiltersIrrelevantFinding(t *testing.T) {
 	root := t.TempDir()
-	userPath := "/" + "Users" + "/test/work\n"
-	if err := os.WriteFile(filepath.Join(root, "config.txt"), []byte(userPath), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "package.json"), []byte(`{"scripts":{"clean":"rm -rf dist"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".nvmrc"), []byte("22\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "package-lock.json"), []byte(`{"lockfileVersion":3}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	var stdout, stderr bytes.Buffer
