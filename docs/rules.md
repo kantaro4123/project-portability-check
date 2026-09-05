@@ -13,12 +13,15 @@
 - `fs.symlink` — symlinks, with stronger severity for absolute or project-external targets.
 - `fs.script-not-executable` — shebang scripts without Unix executable permission.
 
-## Text and shell
+## Text, imports, and shell
 
 - `text.mixed-line-endings` — files containing multiple newline conventions.
+- `text.shell-crlf` — shell scripts whose CRLF shebang can break direct execution on Unix-like systems.
 - `text.non-utf8` — likely source/text files that are not valid UTF-8.
 - `text.utf8-bom` — UTF-8 BOMs that can surprise Unix tooling.
+- `imports.case-mismatch` — relative JavaScript/TypeScript imports whose case does not match the real repository path, a common case-sensitive-filesystem failure.
 - `shell.grep-p`, `shell.sed-i`, `shell.readlink-f`, `shell.date-d`, `shell.xargs-r` — GNU/BSD command-line incompatibilities.
+- `shell.sh-bashism` — Bash-only constructs under a POSIX `sh` shebang, including `[[ ... ]]`, `source`, Bash arrays, here-strings, and related syntax.
 - `package.script-unix` — npm-compatible scripts that rely on Unix shell commands or syntax.
 
 ## Dependencies and runtimes
