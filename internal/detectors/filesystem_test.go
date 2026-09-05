@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/kantaro4123/project-portability-check/internal/analyzer"
@@ -30,7 +31,7 @@ func TestWindowsReservedName(t *testing.T) {
 }
 
 func TestExternalSymlink(t *testing.T) {
-	if os.Getenv("GOOS") == "windows" {
+	if runtime.GOOS == "windows" {
 		t.Skip("symlink creation may require Windows developer mode")
 	}
 	root := t.TempDir()
