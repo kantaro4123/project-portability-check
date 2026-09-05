@@ -1,0 +1,52 @@
+name: Project Portability Check
+description: Scan a repository for cross-platform portability hazards without executing project code.
+author: kantaro4123
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  path:
+    description: Project path to analyze, relative to the GitHub workspace.
+    required: false
+    default: .
+  strict:
+    description: Fail the action when warnings are found as well as errors.
+    required: false
+    default: "true"
+  format:
+    description: Output format: text, json, or sarif.
+    required: false
+    default: text
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache-dependency-path: ${{ github.action_path }}/go.sum
+
+    - name: Build portability checker
+      shell: bash
+      run: |
+        cd "$GITHUB_ACTION_PATH"
+        go build -o "$RUNNER_TEMP/project-portability-check-action" ./cmd/project-portability-check
+
+    - name: Analyze project portability
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_STRICT: ${{ inputs.strict }}
+        INPUT_FORMAT: ${{ inputs.format }}
+      run: |
+        args=()
+        case "$INPUT_FORMAT" in
+          text) ;;
+          json) args+=(--json) ;;
+          sarif) args+=(--sarif) ;;
+          *) echo "error: format must be text, json, or sarif" >&2; exit 2 ;;
+        esac
+        if [ "$INPUT_STRICT" = "true" ]; then
+          args+=(--strict)
+        fi
+        "$RUNNER_TEMP/project-portability-check-action" "${args[@]}" "$GITHUB_WORKSPACE/$INPUT_PATH"
