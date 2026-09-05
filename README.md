@@ -45,6 +45,21 @@ go build ./cmd/project-portability-check
 
 The analyzer has no runtime dependencies beyond the compiled binary.
 
+## GitHub Action
+
+After a tagged public release, the same analyzer can run directly in GitHub Actions:
+
+```yaml
+- uses: actions/checkout@v7
+- uses: kantaro4123/project-portability-check@v0.1.0
+  with:
+    path: .
+    strict: "true"
+    format: text
+```
+
+The composite action builds the checker from its own source, then analyzes the caller's workspace. `format` accepts `text`, `json`, or `sarif`.
+
 ## What it checks
 
 ### Filesystems and paths
@@ -113,7 +128,7 @@ Create `.portabilitycheck.json` in the project root to suppress intentional find
 
 ```json
 {
-  "$schema": "./schemas/portabilitycheck.schema.json",
+  "$schema": "https://raw.githubusercontent.com/kantaro4123/project-portability-check/main/schemas/portabilitycheck.schema.json",
   "ignore_rules": [
     "deps.cargo-lockfile"
   ],
@@ -124,7 +139,7 @@ Create `.portabilitycheck.json` in the project root to suppress intentional find
 }
 ```
 
-`ignore_paths` uses slash-separated glob patterns. A published JSON Schema is included at [`schemas/portabilitycheck.schema.json`](schemas/portabilitycheck.schema.json).
+`ignore_paths` uses slash-separated glob patterns. The repository includes the published schema at [`schemas/portabilitycheck.schema.json`](schemas/portabilitycheck.schema.json).
 
 ## Exit codes
 
@@ -150,10 +165,10 @@ The portability score starts at 100. Errors carry a larger penalty than warnings
 gofmt -w .
 go vet ./...
 go test ./...
-go run ./cmd/project-portability-check .
+go run ./cmd/project-portability-check --strict .
 ```
 
-CI runs formatting, vet, tests, builds, and CLI smoke tests on Linux, macOS, and Windows.
+CI runs formatting, vet, tests, strict self-analysis, the local composite action, builds, and output smoke tests on Linux, macOS, and Windows.
 
 See [Architecture](docs/architecture.md), [Rule reference](docs/rules.md), and [Contributing](CONTRIBUTING.md).
 
