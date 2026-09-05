@@ -1,0 +1,7 @@
+{
+  "$schema": "./schemas/portabilitycheck.schema.json",
+  "ignore_paths": [
+    "README.md",
+    "docs/*"
+  ]
+}
