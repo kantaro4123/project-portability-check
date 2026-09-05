@@ -1,8 +1,10 @@
 name: CI
 
+# Automatic runs are intentionally disabled to avoid consuming GitHub Actions
+# minutes. Run this workflow manually from the Actions tab when validation is
+# explicitly needed.
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
