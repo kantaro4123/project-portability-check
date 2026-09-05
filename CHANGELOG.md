@@ -18,4 +18,6 @@ All notable changes to this project will be documented here.
 - GitHub Actions platform-coverage and `.gitattributes` guidance.
 - Human-readable, JSON, and SARIF 2.1.0 output.
 - `.portabilitycheck.json` suppression configuration with a JSON Schema.
-- Linux, macOS, and Windows CI.
+- Reusable composite GitHub Action for CI integration.
+- Dependency-directory pruning for faster scans of real-world projects.
+- Linux, macOS, and Windows CI with strict self-dogfood checks.
