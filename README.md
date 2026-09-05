@@ -31,7 +31,7 @@ Errors: 0  Warnings: 2  Info: 0
 ## Why use it
 
 - **Static and safe** — it never executes project files, package scripts, build tools, or discovered binaries.
-- **Cross-platform by design** — checks filesystem, shell, runtime, dependency, architecture, Docker, and CI assumptions.
+- **Cross-platform by design** — checks filesystem, imports, shell, runtime, dependency, architecture, Docker, and CI assumptions.
 - **Monorepo-aware** — nested Node.js, Python, Go, and Cargo projects can inherit runtime pins and lockfiles from parent workspaces.
 - **Incremental adoption** — JSON baselines let an existing project fail CI only on newly introduced portability problems.
 - **CI-friendly** — stable rule IDs, exit codes, JSON, richer SARIF, deterministic fingerprints, and a reusable GitHub Action.
@@ -101,14 +101,16 @@ The composite action builds the checker from its own source and then analyzes th
 - Windows reserved names such as `CON`, `NUL`, `COM1`, and `LPT1`
 - Windows-forbidden filename characters and risky long paths
 - files that collide on case-insensitive filesystems
+- relative JavaScript/TypeScript imports whose capitalization differs from the real path and can fail on case-sensitive filesystems
 - symbolic links, including absolute and project-external targets
 - shebang scripts that lack executable permission on Unix-like systems
 
 ### Shell and text
 
-- mixed LF/CRLF line endings
+- mixed LF/CRLF line endings and CRLF shebangs that can break direct Unix execution
 - non-UTF-8 source text and UTF-8 BOMs
 - GNU/BSD incompatibilities including `grep -P`, `sed -i`, `readlink -f`, `date -d`, and `xargs -r`
+- Bash-only syntax such as `[[ ... ]]`, `source`, arrays, and here-strings under a POSIX `#!/bin/sh` shebang
 - Unix-only commands and environment syntax in `package.json` scripts
 - missing `.gitattributes` guidance for repositories with platform-sensitive scripts
 
@@ -177,7 +179,7 @@ Then use it on later runs:
 project-portability-check --strict --baseline .portability-baseline.json .
 ```
 
-Known findings are matched by semantic identity rather than line number, so adding unrelated lines does not make an old issue look new. Matching uses counts, so introducing an additional duplicate of an existing problem is still reported. If the baseline is stored inside the analyzed project, it is automatically excluded from that scan.
+Known findings are matched by stable rule ID, normalized path, and severity rather than line number or display copy, so unrelated line movement and wording improvements do not make an old issue look new. Matching uses counts, so introducing an additional duplicate of an existing problem is still reported. If the baseline is stored inside the analyzed project, it is automatically excluded from that scan.
 
 ## Configuration
 
@@ -233,7 +235,7 @@ go test ./...
 go run ./cmd/project-portability-check --strict --target linux,macos,windows .
 ```
 
-CI runs formatting, vet, tests, strict self-analysis, baseline and target smoke tests, the local composite action, builds, and output smoke tests on Linux, macOS, and Windows.
+CI runs formatting, vet, tests, Linux race detection, strict self-analysis, baseline and target smoke tests, the local composite action, builds, and output smoke tests on Linux, macOS, and Windows.
 
 See [Architecture](docs/architecture.md), [Rule reference](docs/rules.md), and [Contributing](CONTRIBUTING.md).
 
