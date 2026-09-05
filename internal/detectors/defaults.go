@@ -7,16 +7,20 @@ func Default() []analyzer.Detector {
 	return []analyzer.Detector{
 		AbsolutePaths{},
 		WindowsNames{},
+		WindowsPaths{},
 		CaseCollisions{},
 		Symlinks{},
 		LineEndings{},
 		ExecutableScripts{},
 		ShellPortability{},
+		PackageScripts{},
 		RuntimePins{},
 		Lockfiles{},
 		EnvironmentVariables{},
 		NativeBinaries{},
+		DockerPlatform{},
 		GitAttributes{},
 		TextEncoding{},
+		CIMatrix{},
 	}
 }
