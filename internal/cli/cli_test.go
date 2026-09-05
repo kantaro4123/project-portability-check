@@ -26,10 +26,13 @@ func TestListRules(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%q", code, stderr.String())
 	}
-	for _, id := range []string{"paths.absolute", "fs.symlink", "shell.portability", "binary.native"} {
+	for _, id := range []string{"paths.absolute", "fs.windows-reserved", "fs.symlink", "shell.grep-p", "binary.native"} {
 		if !strings.Contains(stdout.String(), id+"\n") {
 			t.Fatalf("rule %q missing from output: %q", id, stdout.String())
 		}
+	}
+	if strings.Contains(stdout.String(), "shell.portability\n") {
+		t.Fatalf("detector group leaked into public rule output: %q", stdout.String())
 	}
 }
 
