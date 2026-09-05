@@ -1,6 +1,6 @@
 # Rule reference
 
-`project-portability-check --list-rules` prints the detector groups enabled by the current binary. Individual findings use stable rule IDs so they can be suppressed in `.portabilitycheck.json` and consumed from JSON or SARIF.
+`project-portability-check --list-rules` prints the stable finding rule IDs enabled by the current binary. These are the same IDs emitted in JSON and SARIF and accepted by `.portabilitycheck.json` `ignore_rules`.
 
 ## Filesystem and paths
 
@@ -23,11 +23,11 @@
 
 ## Dependencies and runtimes
 
-- `runtime.node-unpinned` — Node.js project without a recognized runtime pin.
-- `runtime.python-unpinned` — Python project without a recognized development interpreter pin.
-- `runtime.go-unpinned` — `go.mod` without a `go` directive.
-- `deps.node-lockfile` — JavaScript project without a recognized lockfile.
-- `deps.cargo-lockfile` — Cargo project without `Cargo.lock` (informational because libraries often omit it intentionally).
+- `runtime.node-unpinned` — Node.js package without a recognized runtime pin in the package or a parent workspace.
+- `runtime.python-unpinned` — Python project without a recognized development interpreter pin in the project or a parent workspace.
+- `runtime.go-unpinned` — any `go.mod` without a `go` directive.
+- `deps.node-lockfile` — JavaScript package without a recognized lockfile in the package or a parent workspace.
+- `deps.cargo-lockfile` — Cargo project without `Cargo.lock` in the crate or parent workspace (informational because libraries often omit it intentionally).
 - `env.no-example` — environment-dependent code without an example environment file.
 
 ## Build and delivery
@@ -35,7 +35,11 @@
 - `binary.native` — checked-in ELF, Mach-O, or PE/COFF artifacts.
 - `docker.fixed-platform` — Dockerfile pinned to a single CPU platform.
 - `git.no-gitattributes` — platform-sensitive scripts without a repository line-ending policy.
-- `ci.platform-coverage` — GitHub Actions configuration that does not reference all three major desktop OS families.
+- `ci.platform-coverage` — GitHub Actions configuration that does not reference all three major desktop OS families. Runner names that only occur in YAML comments do not count as coverage.
+
+## Target filtering
+
+`--target` and the `target_platforms` configuration field filter findings that are explicitly tagged with operating systems. Findings that only carry architecture labels such as `amd64` or `arm64` remain visible because OS selection does not remove CPU-architecture risks.
 
 ## Severity
 
