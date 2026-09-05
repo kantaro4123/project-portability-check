@@ -19,6 +19,10 @@ func (NativeBinaries) Detect(_ context.Context, project analyzer.Project) ([]mod
 	var findings []model.Finding
 	for _, rel := range project.Files {
 		full := filepath.Join(project.Root, filepath.FromSlash(rel))
+		info, err := os.Lstat(full)
+		if err != nil || !info.Mode().IsRegular() {
+			continue
+		}
 		f, err := os.Open(full)
 		if err != nil {
 			continue
