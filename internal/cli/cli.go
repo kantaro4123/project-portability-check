@@ -29,7 +29,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	strict := fs.Bool("strict", false, "fail on warnings as well as errors")
 	target := fs.String("target", "", "comma-separated target platforms: linux, macos, windows")
 	baselineFile := fs.String("baseline", "", "suppress findings already present in a previous JSON report")
-	listRules := fs.Bool("list-rules", false, "list built-in detector IDs")
+	listRules := fs.Bool("list-rules", false, "list built-in finding rule IDs")
 	showVersion := fs.Bool("version", false, "print version")
 	fs.Usage = func() {
 		fmt.Fprintln(stderr, "Usage: project-portability-check [options] [path]")
@@ -45,8 +45,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	if *listRules {
-		for _, detector := range detectors.Default() {
-			fmt.Fprintln(stdout, detector.ID())
+		for _, rule := range detectors.Rules() {
+			fmt.Fprintln(stdout, rule.ID)
 		}
 		return 0
 	}
