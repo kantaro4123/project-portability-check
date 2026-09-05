@@ -48,6 +48,13 @@ jobs:
       - name: Dogfood strict portability checks
         run: go run ./cmd/project-portability-check --strict .
 
+      - name: Smoke-test local GitHub Action
+        uses: ./
+        with:
+          path: .
+          strict: "true"
+          format: text
+
       - name: Build
         shell: bash
         run: go build -o "$RUNNER_TEMP/project-portability-check" ./cmd/project-portability-check
