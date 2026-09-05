@@ -11,7 +11,8 @@ import (
 
 func TestAbsolutePathDetection(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, root, "config.txt", "cache=/Users/example/Library/cache\n")
+	userPath := "cache=/" + "Users" + "/example/Library/cache\n"
+	writeTestFile(t, root, "config.txt", userPath)
 	findings, err := (AbsolutePaths{}).Detect(context.Background(), analyzer.Project{Root: root, Files: []string{"config.txt"}})
 	if err != nil {
 		t.Fatal(err)
