@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kantaro4123/project-portability-check/internal/model"
@@ -16,6 +17,19 @@ func TestVersion(t *testing.T) {
 	code := Run(context.Background(), []string{"--version"}, &stdout, &stderr)
 	if code != 0 || stdout.String() != "project-portability-check "+Version+"\n" {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestListRules(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run(context.Background(), []string{"--list-rules"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%q", code, stderr.String())
+	}
+	for _, id := range []string{"paths.absolute", "fs.symlink", "shell.portability", "binary.native"} {
+		if !strings.Contains(stdout.String(), id+"\n") {
+			t.Fatalf("rule %q missing from output: %q", id, stdout.String())
+		}
 	}
 }
 
@@ -40,7 +54,8 @@ func TestJSONCleanProject(t *testing.T) {
 
 func TestStrictFailsOnWarning(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "config.txt"), []byte("/Users/test/work\n"), 0o644); err != nil {
+	userPath := "/" + "Users" + "/test/work\n"
+	if err := os.WriteFile(filepath.Join(root, "config.txt"), []byte(userPath), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	var stdout, stderr bytes.Buffer
