@@ -33,8 +33,8 @@ func TestSARIFOutput(t *testing.T) {
 
 func TestFindingFingerprintIsDeterministic(t *testing.T) {
 	finding := model.Finding{RuleID: "x", Title: "title", Description: "desc", Path: `src\\file.go`, Line: 7}
-	first := findingFingerprint(finding)
-	second := findingFingerprint(finding)
+	first := model.FindingFingerprint(finding)
+	second := model.FindingFingerprint(finding)
 	if first == "" || first != second {
 		t.Fatalf("fingerprint is not deterministic: %q %q", first, second)
 	}
