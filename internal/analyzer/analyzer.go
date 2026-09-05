@@ -83,6 +83,7 @@ func (a *Analyzer) Analyze(ctx context.Context, project Project) ([]model.Findin
 		}
 		return findings[i].RuleID < findings[j].RuleID
 	})
+	model.AttachFingerprints(findings)
 	return findings, nil
 }
 
