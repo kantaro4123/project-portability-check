@@ -13,6 +13,7 @@ func Default() []analyzer.Detector {
 		LineEndings{},
 		ExecutableScripts{},
 		ShellPortability{},
+		ImportCase{},
 		PackageScripts{},
 		RuntimePins{},
 		Lockfiles{},
