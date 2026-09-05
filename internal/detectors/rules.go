@@ -26,6 +26,7 @@ func Rules() []Rule {
 		{ID: "shell.readlink-f", Summary: "GNU-only readlink -f usage"},
 		{ID: "shell.date-d", Summary: "GNU/BSD date flag incompatibility"},
 		{ID: "shell.xargs-r", Summary: "GNU-only xargs -r usage"},
+		{ID: "imports.case-mismatch", Summary: "Relative JavaScript/TypeScript imports use incorrect path case"},
 		{ID: "package.script-unix", Summary: "Unix-specific package.json scripts"},
 		{ID: "runtime.node-unpinned", Summary: "Node.js runtime is not pinned"},
 		{ID: "runtime.python-unpinned", Summary: "Python runtime is not pinned"},
