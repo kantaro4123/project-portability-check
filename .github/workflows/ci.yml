@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Format check
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            printf 'gofmt required for:\n%s\n' "$unformatted"
+            gofmt -d .
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Unit tests
+        run: go test ./...
+
+      - name: Dogfood strict portability checks
+        run: go run ./cmd/project-portability-check --strict .
+
+      - name: Smoke-test local GitHub Action
+        uses: ./
+        with:
+          path: .
+          strict: "true"
+          format: text
+
+      - name: Build
+        shell: bash
+        run: go build -o "$RUNNER_TEMP/project-portability-check" ./cmd/project-portability-check
+
+      - name: Smoke-test JSON and SARIF
+        shell: bash
+        run: |
+          go run ./cmd/project-portability-check --version
+          go run ./cmd/project-portability-check --json . > "$RUNNER_TEMP/portability-report.json"
+          go run ./cmd/project-portability-check --sarif . > "$RUNNER_TEMP/portability-report.sarif"
+          grep -q '"version"' "$RUNNER_TEMP/portability-report.json"
+          grep -q '"runs"' "$RUNNER_TEMP/portability-report.sarif"

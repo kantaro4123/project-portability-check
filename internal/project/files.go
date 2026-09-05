@@ -7,7 +7,18 @@ import (
 	"strings"
 )
 
-// ListFiles returns project files relative to root while skipping VCS metadata.
+var skippedDirectories = map[string]bool{
+	".git":         true,
+	".hg":          true,
+	".svn":         true,
+	"node_modules": true,
+	".venv":        true,
+	"venv":         true,
+	".tox":         true,
+}
+
+// ListFiles returns project files relative to root while skipping VCS metadata
+// and dependency environments that are not owned project source.
 func ListFiles(root string) ([]string, error) {
 	var files []string
 	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
@@ -15,8 +26,7 @@ func ListFiles(root string) ([]string, error) {
 			return err
 		}
 		if entry.IsDir() {
-			name := entry.Name()
-			if path != root && (name == ".git" || name == ".hg" || name == ".svn") {
+			if path != root && skippedDirectories[entry.Name()] {
 				return filepath.SkipDir
 			}
 			return nil
