@@ -36,6 +36,59 @@ func TestNodeRuntimeAndLockfileWarnings(t *testing.T) {
 	}
 }
 
+func TestMonorepoPackageInheritsRootRuntimeAndLockfile(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, ".nvmrc", "22\n")
+	writeTestFile(t, root, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n")
+	writeTestFile(t, root, "packages/web/package.json", `{}`)
+	project := analyzer.Project{Root: root, Files: []string{".nvmrc", "pnpm-lock.yaml", "packages/web/package.json"}}
+
+	runtimeFindings, err := (RuntimePins{}).Detect(context.Background(), project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lockFindings, err := (Lockfiles{}).Detect(context.Background(), project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(runtimeFindings) != 0 || len(lockFindings) != 0 {
+		t.Fatalf("runtime=%+v lock=%+v", runtimeFindings, lockFindings)
+	}
+}
+
+func TestMonorepoReportsEachUnpinnedNestedPackage(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "apps/api/package.json", `{}`)
+	writeTestFile(t, root, "apps/web/package.json", `{}`)
+	project := analyzer.Project{Root: root, Files: []string{"apps/api/package.json", "apps/web/package.json"}}
+
+	runtimeFindings, err := (RuntimePins{}).Detect(context.Background(), project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lockFindings, err := (Lockfiles{}).Detect(context.Background(), project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(runtimeFindings) != 2 || len(lockFindings) != 2 {
+		t.Fatalf("runtime=%+v lock=%+v", runtimeFindings, lockFindings)
+	}
+}
+
+func TestAllGoModulesAreChecked(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "go.mod", "module example.com/root\ngo 1.25\n")
+	writeTestFile(t, root, "tools/go.mod", "module example.com/tools\n")
+	project := analyzer.Project{Root: root, Files: []string{"go.mod", "tools/go.mod"}}
+	findings, err := (RuntimePins{}).Detect(context.Background(), project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != 1 || findings[0].Path != "tools/go.mod" {
+		t.Fatalf("unexpected findings: %+v", findings)
+	}
+}
+
 func TestDockerFixedPlatform(t *testing.T) {
 	root := t.TempDir()
 	writeTestFile(t, root, "Dockerfile", "FROM --platform=linux/amd64 alpine:latest\n")
