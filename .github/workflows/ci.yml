@@ -45,6 +45,10 @@ jobs:
       - name: Unit tests
         run: go test ./...
 
+      - name: Race tests
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+
       - name: Dogfood strict portability checks
         run: go run ./cmd/project-portability-check --strict --target linux,macos,windows .
 
