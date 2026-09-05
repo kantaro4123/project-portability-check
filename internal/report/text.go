@@ -48,6 +48,7 @@ func WriteText(w io.Writer, report model.Report) error {
 				if _, err := fmt.Fprintf(w, "    Fix: %s\n", f.Suggestion); err != nil {
 					return err
 				}
+			}
 		}
 	}
 	_, err := fmt.Fprintf(w, "\nPortability Score: %d/100\nErrors: %d  Warnings: %d  Info: %d\n", report.Summary.Score, report.Summary.Errors, report.Summary.Warnings, report.Summary.Info)
