@@ -3,7 +3,7 @@ package model
 import "testing"
 
 func TestFindingIdentityIgnoresLineMovement(t *testing.T) {
-	first := Finding{RuleID: "paths.absolute", Title: "Absolute path", Description: "example", Severity: SeverityWarning, Path: `src\\config.go`, Line: 4, Platforms: []string{"windows", "linux"}}
+	first := Finding{RuleID: "paths.absolute", Title: "Absolute path", Description: "example", Severity: SeverityWarning, Path: `src\config.go`, Line: 4, Platforms: []string{"windows", "linux"}}
 	second := first
 	second.Path = "src/config.go"
 	second.Line = 20
