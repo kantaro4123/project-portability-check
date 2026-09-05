@@ -23,6 +23,13 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "target_platforms": {
+      "type": "array",
+      "items": {
+        "enum": ["linux", "macos", "windows"]
+      },
+      "uniqueItems": true
     }
   }
 }
