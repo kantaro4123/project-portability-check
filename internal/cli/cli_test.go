@@ -85,6 +85,35 @@ func TestTargetPlatformFiltersIrrelevantFinding(t *testing.T) {
 	}
 }
 
+func TestBaselineSuppressesKnownFindingAndIsNotScanned(t *testing.T) {
+	root := t.TempDir()
+	userPath := "/" + "Users" + "/test/work\n"
+	if err := os.WriteFile(filepath.Join(root, "config.txt"), []byte(userPath), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	var baselineOut, baselineErr bytes.Buffer
+	if code := Run(context.Background(), []string{"--json", root}, &baselineOut, &baselineErr); code != 0 {
+		t.Fatalf("baseline generation code=%d stderr=%q", code, baselineErr.String())
+	}
+	if err := os.WriteFile(filepath.Join(root, "baseline.json"), baselineOut.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run(context.Background(), []string{"--json", "--strict", "--baseline", "baseline.json", root}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%q output=%q", code, stderr.String(), stdout.String())
+	}
+	var result model.Report
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Findings) != 0 || result.BaselineSuppressed != 1 || result.Summary.FilesScanned != 1 {
+		t.Fatalf("unexpected baseline report: %+v", result)
+	}
+}
+
 func TestInvalidTargetFails(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := Run(context.Background(), []string{"--target", "freebsd"}, &stdout, &stderr); code != 2 {
