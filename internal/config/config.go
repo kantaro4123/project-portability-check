@@ -92,14 +92,23 @@ func appliesToTargets(finding model.Finding, targets []string) bool {
 	if len(targets) == 0 || len(finding.Platforms) == 0 {
 		return true
 	}
+
+	hasOSTag := false
 	for _, platform := range finding.Platforms {
+		platform = strings.ToLower(platform)
+		if !supportedPlatforms[platform] {
+			continue
+		}
+		hasOSTag = true
 		for _, target := range targets {
-			if strings.EqualFold(platform, target) {
+			if platform == target {
 				return true
 			}
 		}
 	}
-	return false
+	// Some findings use Platforms for architecture labels (for example
+	// amd64/arm64). OS target selection must not hide those findings.
+	return !hasOSTag
 }
 
 func contains(items []string, value string) bool {
